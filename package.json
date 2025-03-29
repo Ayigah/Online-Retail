@@ -1,9 +1,31 @@
 {
+  "name": "online-retail-system",
+  "version": "1.0.0",
+  "description": "An online retail system API",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "pg": "^8.14.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
-  }
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "retail",
+    "ecommerce",
+    "api",
+    "express"
+  ],
+  "author": "Group F",
+  "license": "MIT"
 }
