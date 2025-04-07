@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Retail API</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      margin-top: 20px;
+    }
+    table th, table td {
+      text-align: center;
+    }
+    .form-control {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1 class="text-center">Online Retail API</h1>
+
+    <!-- Pagination Controls -->
+    <div class="d-flex justify-content-between">
+      <button id="prevPageBtn" class="btn btn-primary">Previous</button>
+      <button id="nextPageBtn" class="btn btn-primary">Next</button>
+    </div>
+
+    <!-- Table to display products -->
+    <table class="table table-bordered mt-4" id="productsTable">
+      <thead class="thead-light">
+        <tr>
+          <th>Invoice No</th>
+          <th>Stock Code</th>
+          <th>Description</th>
+          <th>Quantity</th>
+          <th>Unit Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productsList"></tbody>
+    </table>
+
+    <!-- Add New Product Form -->
+    <h2 class="mt-5">Add New Product</h2>
+    <form id="addProductForm">
+      <div class="form-group">
+        <label for="invoiceno">Invoice No:</label>
+        <input type="text" class="form-control" id="invoiceno" name="invoiceno" required>
+      </div>
+      <div class="form-group">
+        <label for="stockcode">Stock Code:</label>
+        <input type="text" class="form-control" id="stockcode" name="stockcode" required>
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <input type="text" class="form-control" id="description" name="description" required>
+      </div>
+      <div class="form-group">
+        <label for="quantity">Quantity:</label>
+        <input type="number" class="form-control" id="quantity" name="quantity" required>
+      </div>
+      <div class="form-group">
+        <label for="unitprice">Unit Price:</label>
+        <input type="number" class="form-control" id="unitprice" name="unitprice" required>
+      </div>
+      <div class="form-group">
+        <label for="customerid">Customer ID:</label>
+        <input type="number" class="form-control" id="customerid" name="customerid" required>
+      </div>
+      <div class="form-group">
+        <label for="country">Country:</label>
+        <input type="text" class="form-control" id="country" name="country" required>
+      </div>
+      <button type="submit" class="btn btn-success">Add Product</button>
+    </form>
+
+    <!-- Update Product Form -->
+    <h2 class="mt-5">Update Product</h2>
+    <form id="updateProductForm">
+      <div class="form-group">
+        <label for="updateInvoiceno">Invoice No:</label>
+        <input type="text" class="form-control" id="updateInvoiceno" name="updateInvoiceno" required>
+      </div>
+      <div class="form-group">
+        <label for="updateStockcode">Stock Code:</label>
+        <input type="text" class="form-control" id="updateStockcode" name="updateStockcode" required>
+      </div>
+      <div class="form-group">
+        <label for="updateDescription">Description:</label>
+        <input type="text" class="form-control" id="updateDescription" name="updateDescription" required>
+      </div>
+      <div class="form-group">
+        <label for="updateQuantity">Quantity:</label>
+        <input type="number" class="form-control" id="updateQuantity" name="updateQuantity" required>
+      </div>
+      <div class="form-group">
+        <label for="updateUnitprice">Unit Price:</label>
+        <input type="number" class="form-control" id="updateUnitprice" name="updateUnitprice" required>
+      </div>
+      <div class="form-group">
+        <label for="updateCustomerid">Customer ID:</label>
+        <input type="number" class="form-control" id="updateCustomerid" name="updateCustomerid" required>
+      </div>
+      <div class="form-group">
+        <label for="updateCountry">Country:</label>
+        <input type="text" class="form-control" id="updateCountry" name="updateCountry" required>
+      </div>
+      <button type="submit" class="btn btn-warning">Update Product</button>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const apiUrl = 'http://localhost:3000/products'; // Your API base URL
+    let currentPage = 1;
+    let totalProducts = 0;
+    let limit = 10;
+
+    // Fetch products with pagination
+    async function fetchProducts(page = 1, limit = 10) {
+      const response = await fetch(`${apiUrl}?page=${page}&limit=${limit}`);
+      const data = await response.json();
+      totalProducts = data.total;
+
+      // Display products in the table
+      const productsList = document.getElementById('productsList');
+      productsList.innerHTML = '';
+      data.products.forEach(product => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${product.invoiceno}</td>
+          <td>${product.stockcode}</td>
+          <td>${product.description}</td>
+          <td>${product.quantity}</td>
+          <td>${product.unitprice}</td>
+          <td>
+            <button onclick="deleteProduct('${product.invoiceno}')" class="btn btn-danger">Delete</button>
+            <button onclick="fillUpdateForm('${product.invoiceno}')" class="btn btn-info">Update</button>
+          </td>
+        `;
+        productsList.appendChild(row);
+      });
+    }
+
+    // Delete product
+    async function deleteProduct(invoiceno) {
+      const response = await fetch(`${apiUrl}/${invoiceno}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        alert('Product deleted successfully');
+        fetchProducts(currentPage, limit);
+      } else {
+        alert('Error deleting product');
+      }
+    }
+
+    // Fill update form with existing product details
+    function fillUpdateForm(invoiceno) {
+      const updateInvoiceno = document.getElementById('updateInvoiceno');
+      const updateStockcode = document.getElementById('updateStockcode');
+      const updateDescription = document.getElementById('updateDescription');
+      const updateQuantity = document.getElementById('updateQuantity');
+      const updateUnitprice = document.getElementById('updateUnitprice');
+      const updateCustomerid = document.getElementById('updateCustomerid');
+      const updateCountry = document.getElementById('updateCountry');
+
+      fetch(`${apiUrl}/${invoiceno}`)
+        .then(response => response.json())
+        .then(product => {
+          updateInvoiceno.value = product.invoiceno;
+          updateStockcode.value = product.stockcode;
+          updateDescription.value = product.description;
+          updateQuantity.value = product.quantity;
+          updateUnitprice.value = product.unitprice;
+          updateCustomerid.value = product.customerid;
+          updateCountry.value = product.country;
+        });
+    }
+
+    // Update product
+    document.getElementById('updateProductForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const updatedProduct = {
+        invoiceno: form.updateInvoiceno.value,
+        stockcode: form.updateStockcode.value,
+        description: form.updateDescription.value,
+        quantity: form.updateQuantity.value,
+        unitprice: form.updateUnitprice.value,
+        customerid: form.updateCustomerid.value,
+        country: form.updateCountry.value,
+      };
+
+      const response = await fetch(`${apiUrl}/${updatedProduct.invoiceno}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProduct),
+      });
+
+      if (response.ok) {
+        alert('Product updated successfully');
+        fetchProducts(currentPage, limit);
+      } else {
+        alert('Error updating product');
+      }
+    });
+
+    // Add new product
+    document.getElementById('addProductForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.target;
+      const newProduct = {
+        invoiceno: form.invoiceno.value,
+        stockcode: form.stockcode.value,
+        description: form.description.value,
+        quantity: form.quantity.value,
+        unitprice: form.unitprice.value,
+        customerid: form.customerid.value,
+        country: form.country.value,
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProduct),
+      });
+
+      if (response.ok) {
+        alert('Product added successfully');
+        fetchProducts(currentPage, limit);
+      } else {
+        alert('Error adding product');
+      }
+    });
+
+    // Pagination controls
+    document.getElementById('prevPageBtn').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        fetchProducts(currentPage, limit);
+      }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+      if (currentPage * limit < totalProducts) {
+        currentPage++;
+        fetchProducts(currentPage, limit);
+      }
+    });
+
+    // Initial fetch of products
+    fetchProducts(currentPage, limit);
+  </script>
+</body>
+</html>
